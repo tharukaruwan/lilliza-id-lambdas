@@ -1,0 +1,20 @@
+{
+  "name": "lilliza-order-id-generator",
+  "version": "1.0.0",
+  "description": "Lilliza order id generator lambda function",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "lambda",
+    "dynamodb"
+  ],
+  "author": "Tharuka Ruwan",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.238.0",
+    "@aws-sdk/lib-dynamodb": "^3.238.0"
+  }
+}
