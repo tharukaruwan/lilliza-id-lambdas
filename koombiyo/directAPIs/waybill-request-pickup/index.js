@@ -66,21 +66,28 @@ exports.handler = async (event) => {
       };
     }
 
-    if ((wayBillData.Item.subOrderId != body.orderNo) || (wayBillData.Item.isAssigned != true)) {
+    if (wayBillRecord.Item.isAssigned != true) {
       return {
         statusCode: 409,
         body: JSON.stringify("order has to be assign first to request pickup"),
       };
     }
 
-    if (wayBillData.Item.pickUpRequested == true) {
+    if (wayBillRecord.Item.subOrderId != body.orderNo) {
+      return {
+        statusCode: 409,
+        body: JSON.stringify("subOrderId conflict"),
+      };
+    }
+
+    if (wayBillRecord.Item.pickUpRequested == true) {
       return {
         statusCode: 409,
         body: JSON.stringify('already pickup requested'),
       };
     }
 
-    if ((wayBillData.Item.orderPlaced != true)) {
+    if ((wayBillRecord.Item.orderPlaced != true)) {
       return {
         statusCode: 409,
         body: JSON.stringify('order should be placed before pickup request'),
@@ -88,7 +95,7 @@ exports.handler = async (event) => {
     }
 
     // koombiyo order request
-    const postData = {
+    let postData = {
       apikey: KOOMBIYO_API_KEY,
       vehicleType: body.vehicleType,
       pickup_remark: body.pickup_remark,
@@ -101,7 +108,7 @@ exports.handler = async (event) => {
     
     const koombiyoRes = await axios.post(KOOMBIYO_PICKUP_POST_API, postData).then(res => res);
 
-    if (koombiyoRes.statusCode != 200) {
+    if (koombiyoRes.status != 200) {
       return {
         statusCode: 500,
         body: JSON.stringify(`koombiyo system failour`),
@@ -109,6 +116,7 @@ exports.handler = async (event) => {
     }
 
     // if sucess update record as pickup requested
+    delete postData.apikey;
     const updateOrderRequestParams = {
       TableName: TABLE_NAME,
       Item: {

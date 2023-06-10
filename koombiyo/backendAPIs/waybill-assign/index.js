@@ -1,5 +1,5 @@
 const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, PutCommand, QueryCommand } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
 
 const ddbClient = new DynamoDBClient({ region: process.env.DYNAMODB_REGION.toString() });
 const marshallOptions = { convertEmptyValues: false, removeUndefinedValues: false, convertClassInstanceToMap: false };
@@ -97,17 +97,10 @@ exports.handler = async (event) => {
 
   } catch (err) {
 
-    if(err.message == 'jwt expired') {
-      return {
-        statusCode: 401,
-        body: 'TE',
-      };
-    } else {
-      return {
-        statusCode: 500,
-        body: JSON.stringify(err.message),
-      };
-    }
+    return {
+      statusCode: 500,
+      body: JSON.stringify(err.message),
+    };
 
   }
 

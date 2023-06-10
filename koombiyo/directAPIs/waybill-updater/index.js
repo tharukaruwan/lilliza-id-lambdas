@@ -56,19 +56,29 @@ exports.handler = async (event) => {
       };
     }
 
+    let updateItem = {
+      ...wayBillData.Item,
+      ...waybillUpdateData,
+      orderData: wayBillData.Item.orderData,
+      pickupData: wayBillData.Item.pickupData
+    };
+
+    for (const key in updateItem) {
+      if (updateItem[key] === null) {
+        delete updateItem[key];
+      }
+    }
+    
     const updateParams = {
       TableName: TABLE_NAME,
-      Item: {
-        ...wayBillData.Item,
-        ...waybillUpdateData
-      },
+      Item: updateItem,
     };
 
     await ddbDocClient.send(new PutCommand(updateParams));
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ ...wayBillData.Item, ...waybillUpdateData }),
+      body: JSON.stringify(updateItem),
     };
 
   } catch (err) {

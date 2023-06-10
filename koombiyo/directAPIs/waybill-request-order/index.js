@@ -66,14 +66,21 @@ exports.handler = async (event) => {
       };
     }
 
-    if ((wayBillData.Item.subOrderId != body.orderNo) || (wayBillData.Item.isAssigned != true)) {
+    if (wayBillRecord.Item.isAssigned != true) {
       return {
         statusCode: 409,
         body: JSON.stringify("order has to be assign first to request pickup"),
       };
     }
 
-    if (wayBillData.Item.orderPlaced == true) {
+    if (wayBillRecord.Item.subOrderId != body.orderNo) {
+      return {
+        statusCode: 409,
+        body: JSON.stringify("subOrderId conflict"),
+      };
+    }
+
+    if (wayBillRecord.Item.orderPlaced == true) {
       return {
         statusCode: 409,
         body: JSON.stringify('already order Placed'),
@@ -81,7 +88,7 @@ exports.handler = async (event) => {
     }
 
     // koombiyo order request
-    const postData = {
+    let postData = {
       apikey: KOOMBIYO_API_KEY,
       orderWaybillid: body.orderWaybillid,
       orderNo: body.orderNo,
@@ -92,19 +99,20 @@ exports.handler = async (event) => {
       receiverPhone: body.receiverPhone,
       description: body.description,
       spclNote: body.spclNote,
-      getCod: wayBillData.Item.isCOD ? body.getCod : 0
+      getCod: wayBillRecord.Item.isCOD ? body.getCod : 0
     };
     
     const koombiyoRes = await axios.post(KOOMBIYO_ORDER_POST_API, postData).then(res => res);
 
-    if (koombiyoRes.statusCode != 200) {
+    if (koombiyoRes.status != 200) {
       return {
         statusCode: 500,
-        body: JSON.stringify(`koombiyo system failour`),
+        body: JSON.stringify(`koombiyoRes.statusCode`),
       };
     }
 
     // if sucess update record as order requested
+    delete postData.apikey;
     const updateOrderRequestParams = {
       TableName: TABLE_NAME,
       Item: {

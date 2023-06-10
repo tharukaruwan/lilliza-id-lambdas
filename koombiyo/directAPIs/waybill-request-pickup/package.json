@@ -1,7 +1,7 @@
 {
-  "name": "lilliza-waybill-request-order",
+  "name": "lilliza-waybill-request-pickup",
   "version": "1.0.0",
-  "description": "Lilliza waybill request order lambda function",
+  "description": "Lilliza waybill request pickup lambda function",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

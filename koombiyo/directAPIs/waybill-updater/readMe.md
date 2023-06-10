@@ -27,9 +27,7 @@ SAMPLE BODY
 	"isCOD": false,
 	"isError": false,
 	"orderPlaced": false,
-	"pickUpRequested": false,
-	"orderData": "{}",
-	"pickupData": "{}",
+	"pickUpRequested": false
 }
 
 SAMPLE HEADER FOR API REQUEST (ACCESS TOKEN)
