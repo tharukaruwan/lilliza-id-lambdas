@@ -20,9 +20,17 @@ DYNAMODB TABLE STRUCTURE
 SAMPLE BODY
 ===========
 {
+	"api_key": "api_key",
 	"subOrderId": "subOrderId",
 	"isReturn": false,
 	"isCOD": true
+}
+
+SAMPLE RESPONSE
+===============
+{
+	"subOrderId": "subOrderId",
+	"waybill": "waybill"
 }
 
 SAMPLE ENV DATA

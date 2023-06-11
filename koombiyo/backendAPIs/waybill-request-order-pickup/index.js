@@ -40,12 +40,20 @@ exports.handler = async (event) => {
 
     const wayBillData = await ddbDocClient.send(new GetCommand(params));
 
-    if (!wayBillData) {
-      throw new Error("waybillid not found");
+    if (!wayBillData.Item.isAssigned) {
+      throw new Error("waybillid not yet assigned");
+    }
+
+    if (wayBillData.Item.isError) {
+      throw new Error("Already erroe in the record. Contact administration");
+    }
+
+    if (body.orderNo != wayBillData.Item.orderNo) {
+      throw new Error("orderNo conflict");
     }
 
     // body validation
-    const requiredKeys = ['orderWaybillid', 'orderNo', 'receiverName', 'receiverStreet', 'receiverDistrict', 'receiverCity', 'receiverPhone', 'description', 'spclNote', 'getCod', 'vehicleType', 'pickup_remark', 'pickup_address', 'latitude', 'longitude', 'phone', 'qty'];
+    const requiredKeys = ['api_key', 'orderWaybillid', 'orderNo', 'receiverName', 'receiverStreet', 'receiverDistrict', 'receiverCity', 'receiverPhone', 'description', 'spclNote', 'getCod', 'vehicleType', 'pickup_remark', 'pickup_address', 'latitude', 'longitude', 'phone', 'qty'];
     const emptykeys = [];
     for (let key of requiredKeys) {
       if (!body.hasOwnProperty(key)) {
@@ -81,7 +89,7 @@ exports.handler = async (event) => {
     };
     
     const koombiyoOrderRes = await axios.post(KOOMBIYO_ORDER_POST_API, orderData).then(res => res);
-    if (koombiyoOrderRes.statusCode == 200) {
+    if (koombiyoOrderRes.status == 200) {
       orderRequest = true;
     }
 
@@ -98,11 +106,13 @@ exports.handler = async (event) => {
     };
     
     const koombiyoPickupRes = await axios.post(KOOMBIYO_PICKUP_POST_API, pickupData).then(res => res);
-    if (koombiyoPickupRes.statusCode == 200) {
+    if (koombiyoPickupRes.status == 200) {
       pickupRequest = true;
     }
 
     // update lilliza system record
+    delete orderData.apikey;
+    delete pickupData.apikey;
     const updateOrderRequestParams = {
       TableName: TABLE_NAME,
       Item: {

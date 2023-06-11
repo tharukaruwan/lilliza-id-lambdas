@@ -1,6 +1,6 @@
 * TRIGER : SNS TOPIC
-* SNS TOPIC NAME : create-admin-sessions
-* SNS TOPIC ARN : arn:aws:sns:ap-southeast-1:701852280701:create-admin-sessions
+* SNS TOPIC NAME : process-waybill-koombiyo
+* SNS TOPIC ARN : arn:aws:sns:ap-southeast-1:701852280701:process-waybill-koombiyo
 
 DYNAMODB TABLE STRUCTURE
 ========================
