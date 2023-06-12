@@ -17,18 +17,22 @@ const ddbDocClient = DynamoDBDocumentClient.from(ddbClient, translateConfig);
 exports.handler = async (event) => {
 
   try {
-
     // message from SNS
     const body = JSON.parse(event.Records[0].Sns.Message);
+    // const body = event;
+    let errorExist = false;
+
     let orderRequest = false;
     let pickupRequest = false;
 
-    if (body.api_key.toString() != API_KEY) {
-      throw new Error("Not authorised");
+    if (body.api_key != API_KEY) {
+      console.error("Not authorised");
+      errorExist = true;
     }
 
     if (!body.orderWaybillid) {
-      throw new Error("orderWaybillid is required");
+      console.error("orderWaybillid is required");
+      errorExist = true;
     }
 
     const params = {
@@ -41,15 +45,30 @@ exports.handler = async (event) => {
     const wayBillData = await ddbDocClient.send(new GetCommand(params));
 
     if (!wayBillData.Item.isAssigned) {
-      throw new Error("waybillid not yet assigned");
+      console.error("waybillid not yet assigned");
+      errorExist = true;
     }
 
     if (wayBillData.Item.isError) {
-      throw new Error("Already erroe in the record. Contact administration");
+      console.error("Already erroe in the record. Contact administration");
+      errorExist = true;
     }
 
-    if (body.orderNo != wayBillData.Item.orderNo) {
-      throw new Error("orderNo conflict");
+    if (body.orderNo != wayBillData.Item.subOrderId) {
+      console.error("orderNo conflict : ", body.orderNo , wayBillData.Item.subOrderId);
+      errorExist = true;
+    }
+    
+    if (errorExist) {
+      const updateErrParams = {
+        TableName: TABLE_NAME,
+        Item: {
+          ...wayBillData.Item,
+          isError: true
+        },
+      };
+      await ddbDocClient.send(new PutCommand(updateErrParams));
+      return;
     }
 
     // body validation
@@ -87,12 +106,13 @@ exports.handler = async (event) => {
       spclNote: body.spclNote,
       getCod: (wayBillData.Item.isCOD == true) ? body.getCod : 0
     };
-    
+
     const koombiyoOrderRes = await axios.post(KOOMBIYO_ORDER_POST_API, orderData).then(res => res);
+
     if (koombiyoOrderRes.status == 200) {
       orderRequest = true;
     }
-
+    
     // koombiyo request pickup
     const pickupData = {
       apikey: KOOMBIYO_API_KEY,
@@ -104,8 +124,9 @@ exports.handler = async (event) => {
       phone: body.phone,							
       qty: body.qty
     };
-    
+
     const koombiyoPickupRes = await axios.post(KOOMBIYO_PICKUP_POST_API, pickupData).then(res => res);
+
     if (koombiyoPickupRes.status == 200) {
       pickupRequest = true;
     }
@@ -129,7 +150,7 @@ exports.handler = async (event) => {
     return;
 
   } catch (err) {
-
+    console.error(err);
     return {
       statusCode: 500,
       body: JSON.stringify(err.message),
